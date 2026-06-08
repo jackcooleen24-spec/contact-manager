@@ -815,13 +815,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th onclick="sortTable('fields.Name[0]')">Name ↕</th>
-                        <th onclick="sortTable('fields.Company[0]')">Company ↕</th>
+                        <th onclick="sortTable('Name')">Name ↕</th>
+                        <th onclick="sortTable('Company')">Company ↕</th>
                         <th>Category</th>
                         <th>Priority</th>
                         <th>Email</th>
                         <th>Notes</th>
-                        <th onclick="sortTable('fields.DateAdded[0]')">Added ↕</th>
+                        <th onclick="sortTable('DateAdded')">Added ↕</th>
                     </tr>
                 </thead>
                 <tbody id="tbody">
@@ -896,13 +896,14 @@
         const AIRTABLE_API_TOKEN = 'patqdnSy0y2BLq6cw.05675345bd74027fdefa3553451c04bec4ac5e755173182bf0ee0bda51bb6f0e';
         const CORRECT_PASSWORD = 'richard';
 
+        const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`;
+
         // State
         let contacts = [];
-        let airtableRecords = [];
         let filterCategory = 'all';
         let filterPriority = 'all';
-        let sortField = null;
-        let sortOrder = 'asc';
+        let sortField = 'DateAdded';
+        let sortOrder = 'desc';
 
         // Password protection
         function checkPassword() {
@@ -933,49 +934,47 @@
 
         // Load contacts from Airtable
         function loadContacts() {
-            fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`, {
+            fetch(AIRTABLE_API_URL, {
+                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${AIRTABLE_API_TOKEN}`
+                    'Authorization': `Bearer ${AIRTABLE_API_TOKEN}`,
+                    'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
             .then(data => {
-                airtableRecords = data.records || [];
-                contacts = airtableRecords.map(record => ({
+                contacts = data.records.map(record => ({
                     id: record.id,
-                    name: record.fields.Name ? record.fields.Name[0] : '',
-                    company: record.fields.Company ? record.fields.Company[0] : '',
-                    category: record.fields.Category ? record.fields.Category[0] : '',
-                    priority: record.fields.Priority ? record.fields.Priority[0] : '',
-                    email: record.fields.Email ? record.fields.Email[0] : '',
-                    notes: record.fields.Notes ? record.fields.Notes[0] : '',
-                    dateAdded: record.fields.DateAdded ? record.fields.DateAdded[0] : new Date().toLocaleDateString()
+                    ...record.fields
                 }));
                 render();
             })
             .catch(error => {
                 console.error('Error loading contacts:', error);
-                showError('Failed to load contacts');
+                showError('Failed to load contacts: ' + error.message);
             });
         }
 
         // Render table
         function render() {
-            let filtered = [...contacts];
+            let filtered = contacts;
 
             if (filterCategory !== 'all') {
-                filtered = filtered.filter(c => c.category === filterCategory);
+                filtered = filtered.filter(c => c.Category === filterCategory);
             }
             if (filterPriority !== 'all') {
-                filtered = filtered.filter(c => c.priority === filterPriority);
+                filtered = filtered.filter(c => c.Priority === filterPriority);
             }
 
             const search = document.getElementById('search').value.toLowerCase();
             if (search) {
                 filtered = filtered.filter(c =>
-                    c.name.toLowerCase().includes(search) ||
-                    c.company.toLowerCase().includes(search) ||
-                    c.notes.toLowerCase().includes(search)
+                    (c.Name && c.Name.toLowerCase().includes(search)) ||
+                    (c.Company && c.Company.toLowerCase().includes(search)) ||
+                    (c.Notes && c.Notes.toLowerCase().includes(search))
                 );
             }
 
@@ -994,15 +993,15 @@
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr style="height: 200px;"><td colspan="7"><div class="empty-state"><div class="empty-state-icon">👤</div><div class="empty-state-text">No contacts found.</div></div></td></tr>`;
             } else {
-                tbody.innerHTML = filtered.map((c, idx) => `
+                tbody.innerHTML = filtered.map((c) => `
                     <tr onclick="editContact('${c.id}')">
-                        <td class="name-cell">${c.name}</td>
-                        <td class="company-cell">${c.company || '—'}</td>
-                        <td><span class="category-badge">${c.category}</span></td>
-                        <td><span class="priority-badge priority-${c.priority.toLowerCase()}"><span class="priority-dot dot-${c.priority.toLowerCase()}"></span>${c.priority}</span></td>
-                        <td>${c.email || '—'}</td>
-                        <td style="color: #888; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${c.notes || '—'}</td>
-                        <td>${c.dateAdded}</td>
+                        <td class="name-cell">${c.Name || '—'}</td>
+                        <td class="company-cell">${c.Company || '—'}</td>
+                        <td><span class="category-badge">${c.Category || '—'}</span></td>
+                        <td><span class="priority-badge priority-${(c.Priority || '').toLowerCase()}"><span class="priority-dot dot-${(c.Priority || '').toLowerCase()}"></span>${c.Priority || '—'}</span></td>
+                        <td>${c.Email || '—'}</td>
+                        <td style="color: #888; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${c.Notes || '—'}</td>
+                        <td>${c.DateAdded || '—'}</td>
                     </tr>
                 `).join('');
             }
@@ -1013,7 +1012,7 @@
         function updateStats(filtered) {
             document.getElementById('total').textContent = contacts.length;
             document.getElementById('shown').textContent = filtered.length;
-            document.getElementById('high').textContent = contacts.filter(c => c.priority === 'High').length;
+            document.getElementById('high').textContent = contacts.filter(c => c.Priority === 'High').length;
         }
 
         function setFilter(btn, type) {
@@ -1033,13 +1032,10 @@
         }
 
         function sortTable(field) {
-            // Extract field name from path
-            const fieldName = field.split('[')[0];
-
-            if (sortField === fieldName) {
+            if (sortField === field) {
                 sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
             } else {
-                sortField = fieldName;
+                sortField = field;
                 sortOrder = 'asc';
             }
             render();
@@ -1053,12 +1049,12 @@
                 const contact = contacts.find(c => c.id === recordId);
                 if (contact) {
                     title.textContent = 'Edit Contact';
-                    form.elements['name'].value = contact.name;
-                    form.elements['company'].value = contact.company || '';
-                    form.elements['category'].value = contact.category;
-                    form.elements['priority'].value = contact.priority;
-                    form.elements['email'].value = contact.email || '';
-                    form.elements['notes'].value = contact.notes || '';
+                    form.elements['name'].value = contact.Name || '';
+                    form.elements['company'].value = contact.Company || '';
+                    form.elements['category'].value = contact.Category || '';
+                    form.elements['priority'].value = contact.Priority || '';
+                    form.elements['email'].value = contact.Email || '';
+                    form.elements['notes'].value = contact.Notes || '';
                     form.dataset.recordId = recordId;
                 }
             } else {
@@ -1078,45 +1074,37 @@
             const form = e.target;
             const recordId = form.dataset.recordId;
 
-            const data = {
-                fields: {
-                    Name: [form.elements['name'].value],
-                    Company: [form.elements['company'].value],
-                    Category: [form.elements['category'].value],
-                    Priority: [form.elements['priority'].value],
-                    Email: [form.elements['email'].value],
-                    Notes: [form.elements['notes'].value],
-                    DateAdded: [new Date().toLocaleDateString()]
-                }
+            const fields = {
+                Name: form.elements['name'].value,
+                Company: form.elements['company'].value,
+                Category: form.elements['category'].value,
+                Priority: form.elements['priority'].value,
+                Email: form.elements['email'].value,
+                Notes: form.elements['notes'].value,
+                DateAdded: recordId ? (contacts.find(c => c.id === recordId)?.DateAdded || new Date().toLocaleDateString()) : new Date().toLocaleDateString()
             };
 
-            if (recordId) {
-                // Update existing record
-                fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}/${recordId}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${AIRTABLE_API_TOKEN}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                }).then(() => {
-                    loadContacts();
-                    closeModal();
-                }).catch(error => showError('Failed to update contact'));
-            } else {
-                // Create new record
-                fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${AIRTABLE_API_TOKEN}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ records: [data] })
-                }).then(() => {
-                    loadContacts();
-                    closeModal();
-                }).catch(error => showError('Failed to save contact'));
-            }
+            const method = recordId ? 'PATCH' : 'POST';
+            const url = recordId ? `${AIRTABLE_API_URL}/${recordId}` : AIRTABLE_API_URL;
+            const body = recordId ? { fields } : { fields };
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                loadContacts();
+                closeModal();
+            })
+            .catch(error => {
+                console.error('Error saving contact:', error);
+                showError('Failed to save contact: ' + error.message);
+            });
         }
 
         function editContact(recordId) {
@@ -1127,13 +1115,13 @@
             const csv = [
                 ['Name', 'Company', 'Category', 'Priority', 'Email', 'Notes', 'Added'].join(','),
                 ...contacts.map(c => [
-                    `"${c.name}"`,
-                    `"${c.company || ''}"`,
-                    c.category,
-                    c.priority,
-                    `"${c.email || ''}"`,
-                    `"${c.notes || ''}"`,
-                    c.dateAdded
+                    `"${c.Name || ''}"`,
+                    `"${c.Company || ''}"`,
+                    c.Category || '',
+                    c.Priority || '',
+                    `"${c.Email || ''}"`,
+                    `"${c.Notes || ''}"`,
+                    c.DateAdded || ''
                 ].join(','))
             ].join('\n');
 
