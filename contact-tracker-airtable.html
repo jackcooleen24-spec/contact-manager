@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Manager | Excel Sports Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #0f1f3a 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+
+        .password-overlay.hidden {
+            display: none;
+        }
+
+        .password-box {
+            background: linear-gradient(135deg, #0f1f3a 0%, #0a1628 100%);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 16px;
+            padding: 48px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .password-logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #000000;
+            font-size: 28px;
+            margin: 0 auto 24px;
+        }
+
+        .password-box h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .password-box p {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 28px;
+        }
+
+        .password-input-group {
+            margin-bottom: 20px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .password-input::placeholder {
+            color: #555;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+        }
+
+        .password-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .password-btn:hover {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            box-shadow: 0 12px 24px rgba(255, 215, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .password-error {
+            color: #ff6b6b;
+            font-size: 12px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .password-error.show {
+            display: block;
+        }
+
+        .topbar {
+            background: #000000;
+            padding: 12px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #000000;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .topbar-right {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sync-status {
+            font-size: 11px;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sync-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 32px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        .header-left h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-left p {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 2px;
+        }
+
+        .header-left .subtitle {
+            font-size: 12px;
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            background: rgba(255, 215, 0, 0.05);
+            color: #ffd700;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000000;
+            border: none;
+            font-weight: 700;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            box-shadow: 0 12px 24px rgba(255, 215, 0, 0.3);
+        }
+
+        .search-filters {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .search-bar {
+            margin-bottom: 24px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input::placeholder {
+            color: #666;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.08);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            background: rgba(255, 215, 0, 0.05);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #aaa;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-btn.active {
+            background: #ffd700;
+            color: #000000;
+            border-color: #ffd700;
+            font-weight: 700;
+        }
+
+        .filter-btn:hover {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .priority-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-high {
+            background: #ff4444;
+        }
+
+        .dot-medium {
+            background: #ffb84d;
+        }
+
+        .dot-low {
+            background: #666;
+        }
+
+        .stats {
+            display: flex;
+            gap: 40px;
+            font-size: 12px;
+            color: #aaa;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #ffd700;
+            font-size: 16px;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        th:hover {
+            background: rgba(255, 215, 0, 0.08);
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.08);
+            font-size: 13px;
+            color: #e0e0e0;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 215, 0, 0.08);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .name-cell {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .company-cell {
+            color: #aaa;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .priority-high {
+            background: rgba(255, 68, 68, 0.15);
+            color: #ff6b6b;
+        }
+
+        .priority-medium {
+            background: rgba(255, 180, 77, 0.15);
+            color: #ffb84d;
+        }
+
+        .priority-low {
+            background: rgba(100, 100, 100, 0.15);
+            color: #888;
+        }
+
+        .empty-state {
+            padding: 100px 40px;
+            text-align: center;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+            opacity: 0.4;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .empty-state-text strong {
+            color: #ffd700;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #aaa;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #0f1f3a 0%, #0a1628 100%);
+            border-radius: 16px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-header p {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #555;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn-form {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-form-primary {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000000;
+        }
+
+        .btn-form-primary:hover {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            box-shadow: 0 12px 24px rgba(255, 215, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-form-secondary {
+            background: rgba(255, 215, 0, 0.05);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-form-secondary:hover {
+            background: rgba(255, 215, 0, 0.15);
+            border-color: #ffd700;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                padding: 24px 16px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .header-left h1 {
+                font-size: 28px;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            th, td {
+                padding: 12px;
+                font-size: 12px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 24px;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 215, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 215, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="password-overlay" id="passwordOverlay">
+        <div class="password-box">
+            <div class="password-logo">⚡</div>
+            <h2>Excel Sports</h2>
+            <p>Contact Manager — Password Required</p>
+            <div class="password-input-group">
+                <input type="password" class="password-input" id="passwordInput" placeholder="Enter password" onkeypress="if(event.key==='Enter') checkPassword()">
+                <div class="password-error" id="passwordError">Incorrect password. Try again.</div>
+            </div>
+            <button class="password-btn" onclick="checkPassword()">Unlock</button>
+        </div>
+    </div>
+
+    <div class="topbar">
+        <div class="logo-section">
+            <div class="logo">⚡</div>
+            <div class="logo-text">Excel Sports</div>
+        </div>
+        <div class="sync-status">
+            <span class="sync-indicator"></span>
+            <span>Live Sync Active</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Contact Manager</h1>
+                <p>Excel Sports Management</p>
+                <div class="subtitle">Director of Marketing</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn" onclick="exportData()">↓ Export</button>
+                <button class="btn btn-primary" onclick="openModal()">+ Add Contact</button>
+            </div>
+        </div>
+
+        <div class="search-filters">
+            <div class="search-bar">
+                <input type="text" id="search" placeholder="Search name, company, notes..." onkeyup="filterTable()">
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-group">
+                    <span class="filter-label">Category</span>
+                    <button class="filter-btn active" data-type="category" data-value="all" onclick="setFilter(this, 'category')">All</button>
+                    <button class="filter-btn" data-type="category" data-value="Connection Request" onclick="setFilter(this, 'category')">Connection</button>
+                    <button class="filter-btn" data-type="category" data-value="Internal" onclick="setFilter(this, 'category')">Internal</button>
+                    <button class="filter-btn" data-type="category" data-value="Client" onclick="setFilter(this, 'category')">Client</button>
+                    <button class="filter-btn" data-type="category" data-value="Friend" onclick="setFilter(this, 'category')">Friend</button>
+                    <button class="filter-btn" data-type="category" data-value="Talent Sourcing" onclick="setFilter(this, 'category')">Talent</button>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-group">
+                    <span class="filter-label">Priority</span>
+                    <button class="filter-btn active" data-type="priority" data-value="all" onclick="setFilter(this, 'priority')">All</button>
+                    <button class="filter-btn" data-type="priority" data-value="High" onclick="setFilter(this, 'priority')"><span class="priority-dot dot-high"></span>High</button>
+                    <button class="filter-btn" data-type="priority" data-value="Medium" onclick="setFilter(this, 'priority')"><span class="priority-dot dot-medium"></span>Medium</button>
+                    <button class="filter-btn" data-type="priority" data-value="Low" onclick="setFilter(this, 'priority')"><span class="priority-dot dot-low"></span>Low</button>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item"><span class="stat-value" id="total">0</span> Total</div>
+                <div class="stat-item"><span class="stat-value" id="shown">0</span> Shown</div>
+                <div class="stat-item"><span class="priority-dot dot-high"></span><span class="stat-value" id="high">0</span> High Priority</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('fields.Name[0]')">Name ↕</th>
+                        <th onclick="sortTable('fields.Company[0]')">Company ↕</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Email</th>
+                        <th>Notes</th>
+                        <th onclick="sortTable('fields.DateAdded[0]')">Added ↕</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody">
+                    <tr style="height: 200px;">
+                        <td colspan="7">
+                            <div class="loading">
+                                <div class="empty-state-icon">⏳</div>
+                                <div class="empty-state-text">Loading contacts...</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Contact</h2>
+                <p>Save to network</p>
+            </div>
+            <form id="form" onsubmit="saveContact(event)">
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" id="name" placeholder="Full name" required>
+                </div>
+                <div class="form-group">
+                    <label>Company</label>
+                    <input type="text" id="company" placeholder="Company or organization">
+                </div>
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="category" required>
+                        <option value="">Select category</option>
+                        <option value="Connection Request">Connection Request</option>
+                        <option value="Internal">Internal</option>
+                        <option value="Client">Client</option>
+                        <option value="Friend">Friend</option>
+                        <option value="Talent Sourcing">Talent Sourcing</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority *</label>
+                    <select id="priority" required>
+                        <option value="">Select priority</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" id="email" placeholder="Email address">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="notes" placeholder="Add relevant notes..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-form btn-form-primary">Save Contact</button>
+                    <button type="button" class="btn-form btn-form-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Airtable Configuration
+        const AIRTABLE_BASE_ID = 'appSzxgTwSFBDGur2';
+        const AIRTABLE_TABLE_NAME = 'Contacts';
+        const AIRTABLE_API_TOKEN = 'patqdnSy0y2BLq6cw.05675345bd74027fdefa3553451c04bec4ac5e755173182bf0ee0bda51bb6f0e';
+        const CORRECT_PASSWORD = 'richard';
+
+        // State
+        let contacts = [];
+        let airtableRecords = [];
+        let filterCategory = 'all';
+        let filterPriority = 'all';
+        let sortField = null;
+        let sortOrder = 'asc';
+
+        // Password protection
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            const overlay = document.getElementById('passwordOverlay');
+
+            if (input.value === CORRECT_PASSWORD) {
+                overlay.classList.add('hidden');
+                localStorage.setItem('esm_authenticated', 'true');
+                loadContacts();
+            } else {
+                error.classList.add('show');
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        window.addEventListener('load', function() {
+            const isAuthenticated = localStorage.getItem('esm_authenticated');
+            if (isAuthenticated) {
+                document.getElementById('passwordOverlay').classList.add('hidden');
+                loadContacts();
+            } else {
+                document.getElementById('passwordInput').focus();
+            }
+        });
+
+        // Load contacts from Airtable
+        function loadContacts() {
+            fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`, {
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_TOKEN}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                airtableRecords = data.records || [];
+                contacts = airtableRecords.map(record => ({
+                    id: record.id,
+                    name: record.fields.Name ? record.fields.Name[0] : '',
+                    company: record.fields.Company ? record.fields.Company[0] : '',
+                    category: record.fields.Category ? record.fields.Category[0] : '',
+                    priority: record.fields.Priority ? record.fields.Priority[0] : '',
+                    email: record.fields.Email ? record.fields.Email[0] : '',
+                    notes: record.fields.Notes ? record.fields.Notes[0] : '',
+                    dateAdded: record.fields.DateAdded ? record.fields.DateAdded[0] : new Date().toLocaleDateString()
+                }));
+                render();
+            })
+            .catch(error => {
+                console.error('Error loading contacts:', error);
+                showError('Failed to load contacts');
+            });
+        }
+
+        // Render table
+        function render() {
+            let filtered = [...contacts];
+
+            if (filterCategory !== 'all') {
+                filtered = filtered.filter(c => c.category === filterCategory);
+            }
+            if (filterPriority !== 'all') {
+                filtered = filtered.filter(c => c.priority === filterPriority);
+            }
+
+            const search = document.getElementById('search').value.toLowerCase();
+            if (search) {
+                filtered = filtered.filter(c =>
+                    c.name.toLowerCase().includes(search) ||
+                    c.company.toLowerCase().includes(search) ||
+                    c.notes.toLowerCase().includes(search)
+                );
+            }
+
+            if (sortField) {
+                filtered.sort((a, b) => {
+                    const aVal = a[sortField] || '';
+                    const bVal = b[sortField] || '';
+                    if (typeof aVal === 'string') {
+                        return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                    }
+                    return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+                });
+            }
+
+            const tbody = document.getElementById('tbody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr style="height: 200px;"><td colspan="7"><div class="empty-state"><div class="empty-state-icon">👤</div><div class="empty-state-text">No contacts found.</div></div></td></tr>`;
+            } else {
+                tbody.innerHTML = filtered.map((c, idx) => `
+                    <tr onclick="editContact('${c.id}')">
+                        <td class="name-cell">${c.name}</td>
+                        <td class="company-cell">${c.company || '—'}</td>
+                        <td><span class="category-badge">${c.category}</span></td>
+                        <td><span class="priority-badge priority-${c.priority.toLowerCase()}"><span class="priority-dot dot-${c.priority.toLowerCase()}"></span>${c.priority}</span></td>
+                        <td>${c.email || '—'}</td>
+                        <td style="color: #888; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${c.notes || '—'}</td>
+                        <td>${c.dateAdded}</td>
+                    </tr>
+                `).join('');
+            }
+
+            updateStats(filtered);
+        }
+
+        function updateStats(filtered) {
+            document.getElementById('total').textContent = contacts.length;
+            document.getElementById('shown').textContent = filtered.length;
+            document.getElementById('high').textContent = contacts.filter(c => c.priority === 'High').length;
+        }
+
+        function setFilter(btn, type) {
+            document.querySelectorAll(`[data-type="${type}"]`).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (type === 'category') {
+                filterCategory = btn.dataset.value;
+            } else {
+                filterPriority = btn.dataset.value;
+            }
+            render();
+        }
+
+        function filterTable() {
+            render();
+        }
+
+        function sortTable(field) {
+            // Extract field name from path
+            const fieldName = field.split('[')[0];
+
+            if (sortField === fieldName) {
+                sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortField = fieldName;
+                sortOrder = 'asc';
+            }
+            render();
+        }
+
+        function openModal(recordId = null) {
+            const form = document.getElementById('form');
+            const title = document.getElementById('modalTitle');
+
+            if (recordId) {
+                const contact = contacts.find(c => c.id === recordId);
+                if (contact) {
+                    title.textContent = 'Edit Contact';
+                    form.elements['name'].value = contact.name;
+                    form.elements['company'].value = contact.company || '';
+                    form.elements['category'].value = contact.category;
+                    form.elements['priority'].value = contact.priority;
+                    form.elements['email'].value = contact.email || '';
+                    form.elements['notes'].value = contact.notes || '';
+                    form.dataset.recordId = recordId;
+                }
+            } else {
+                title.textContent = 'Add Contact';
+                form.reset();
+                delete form.dataset.recordId;
+            }
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function saveContact(e) {
+            e.preventDefault();
+            const form = e.target;
+            const recordId = form.dataset.recordId;
+
+            const data = {
+                fields: {
+                    Name: [form.elements['name'].value],
+                    Company: [form.elements['company'].value],
+                    Category: [form.elements['category'].value],
+                    Priority: [form.elements['priority'].value],
+                    Email: [form.elements['email'].value],
+                    Notes: [form.elements['notes'].value],
+                    DateAdded: [new Date().toLocaleDateString()]
+                }
+            };
+
+            if (recordId) {
+                // Update existing record
+                fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}/${recordId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_API_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).then(() => {
+                    loadContacts();
+                    closeModal();
+                }).catch(error => showError('Failed to update contact'));
+            } else {
+                // Create new record
+                fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_API_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ records: [data] })
+                }).then(() => {
+                    loadContacts();
+                    closeModal();
+                }).catch(error => showError('Failed to save contact'));
+            }
+        }
+
+        function editContact(recordId) {
+            openModal(recordId);
+        }
+
+        function exportData() {
+            const csv = [
+                ['Name', 'Company', 'Category', 'Priority', 'Email', 'Notes', 'Added'].join(','),
+                ...contacts.map(c => [
+                    `"${c.name}"`,
+                    `"${c.company || ''}"`,
+                    c.category,
+                    c.priority,
+                    `"${c.email || ''}"`,
+                    `"${c.notes || ''}"`,
+                    c.dateAdded
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Excel_Sports_Contacts.csv';
+            a.click();
+        }
+
+        function showError(message) {
+            alert(message);
+        }
+
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal')) closeModal();
+        });
+
+        // Auto-refresh every 5 seconds
+        setInterval(() => {
+            if (!document.getElementById('passwordOverlay').classList.contains('hidden')) {
+                return;
+            }
+            loadContacts();
+        }, 5000);
+    </script>
+</body>
+</html>
